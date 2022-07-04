@@ -22,7 +22,8 @@ public class ProductController : Controller
 
     public IActionResult Index()
     {
-        return View();
+        var productList = _UnitOfWork.Product.GetAll(includeProperties: "Category,CoverType");
+        return View(productList);
     }
    
     //UPSERT METHOD

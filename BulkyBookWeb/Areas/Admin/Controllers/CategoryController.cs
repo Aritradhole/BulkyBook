@@ -1,31 +1,36 @@
 ﻿using BulkyBook.DataAccess;
 using BulkyBook.DataAccess.Repository.IRepository;
 using BulkyBook.Models;
+using BulkyBook.Utility;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
+using System.Net.Http.Headers;
 
 namespace BulkyBookWeb.Controllers;
 [Area("Admin")]
-
+//[Authorize(Roles = SD.Role_Admin)]
 public class CategoryController : Controller
 {
-    private readonly IUnitOfWork _UnitOfWork;
+    private readonly IUnitOfWork _unitOfWork;
 
     public CategoryController(IUnitOfWork unitOfWork)
     {
-        _UnitOfWork = unitOfWork;
+        _unitOfWork = unitOfWork;
     }
 
     public IActionResult Index()
     {
-        IEnumerable<Category> objCategoryList = _UnitOfWork.Category.GetAll();
+        IEnumerable<Category> objCategoryList = _unitOfWork.Category.GetAll();
         return View(objCategoryList);
     }
-    //CREATE METHOD
-    //Get
+
+    //GET
     public IActionResult Create()
     {
         return View();
     }
+
     //POST
     [HttpPost]
     [ValidateAntiForgeryToken]
@@ -33,34 +38,37 @@ public class CategoryController : Controller
     {
         if (obj.Name == obj.DisplayOrder.ToString())
         {
-            ModelState.AddModelError("Name", "The Display Order Cannot Be Same as Name");
+            ModelState.AddModelError("name", "The DisplayOrder cannot exactly match the Name.");
         }
         if (ModelState.IsValid)
         {
-            _UnitOfWork.Category.Add(obj);
-            _UnitOfWork.Save();
-            TempData["Success"] = "Category created successfully...";
+            _unitOfWork.Category.Add(obj);
+            _unitOfWork.Save();
+            TempData["success"] = "Category created successfully";
             return RedirectToAction("Index");
         }
         return View(obj);
     }
-    //EDIT METHOD
-    //Get
+
+    //GET
     public IActionResult Edit(int? id)
     {
         if (id == null || id == 0)
         {
             return NotFound();
         }
-        //var CategoryFromDb = _db.Categories.Find(id);
-        var categoryFromDbFrist = _UnitOfWork.Category.GetFristOrDefault(c => c.Id == id);
-        //var categoryFromDbSingle = _db.Categories.SingleOrDefault(c => c.Id == id);
-        if (categoryFromDbFrist == null)
+        //var categoryFromDb = _db.Categories.Find(id);
+        var categoryFromDbFirst = _unitOfWork.Category.GetFristOrDefault(u => u.Id == id);
+        //var categoryFromDbSingle = _db.Categories.SingleOrDefault(u => u.Id == id);
+
+        if (categoryFromDbFirst == null)
         {
             return NotFound();
         }
-        return View(categoryFromDbFrist);
+
+        return View(categoryFromDbFirst);
     }
+
     //POST
     [HttpPost]
     [ValidateAntiForgeryToken]
@@ -68,50 +76,51 @@ public class CategoryController : Controller
     {
         if (obj.Name == obj.DisplayOrder.ToString())
         {
-            ModelState.AddModelError("Name", "The Display Order Cannot Be Same as Name");
+            ModelState.AddModelError("name", "The DisplayOrder cannot exactly match the Name.");
         }
         if (ModelState.IsValid)
         {
-            _UnitOfWork.Category.Update(obj);
-            _UnitOfWork.Save();
-            TempData["Success"] = "Category updated successfully...";
+            _unitOfWork.Category.Update(obj);
+            _unitOfWork.Save();
+            TempData["success"] = "Category updated successfully";
             return RedirectToAction("Index");
         }
         return View(obj);
     }
-    //DELETE METHOD
-    //Get
+
     public IActionResult Delete(int? id)
     {
         if (id == null || id == 0)
         {
             return NotFound();
         }
-        //var CategoryFromDb = _db.Categories.Find(id);
-        var categoryFromDbFrist = _UnitOfWork.Category.GetFristOrDefault(c => c.Id == id);
-        //var categoryFromDbSingle = _db.Categories.SingleOrDefault(c => c.Id == id);
-        if (categoryFromDbFrist == null)
+        //var categoryFromDb = _db.Categories.Find(id);
+        var categoryFromDbFirst = _unitOfWork.Category.GetFristOrDefault(u => u.Id == id);
+        //var categoryFromDbSingle = _db.Categories.SingleOrDefault(u => u.Id == id);
+
+        if (categoryFromDbFirst == null)
         {
             return NotFound();
         }
-        return View(categoryFromDbFrist);
+
+        return View(categoryFromDbFirst);
     }
+
     //POST
-    [HttpPost]
+    [HttpPost, ActionName("Delete")]
     [ValidateAntiForgeryToken]
-    public IActionResult DeletePost(int? id)
+    public IActionResult DeletePOST(int? id)
     {
-        var obj= _UnitOfWork.Category.GetFristOrDefault(c => c.Id == id);
+        var obj = _unitOfWork.Category.GetFristOrDefault(u => u.Id == id);
         if (obj == null)
         {
             return NotFound();
         }
 
-        _UnitOfWork.Category.Remove(obj);
-        _UnitOfWork.Save();
-        TempData["Success"] = "Category deleted successfully...";
+        _unitOfWork.Category.Remove(obj);
+        _unitOfWork.Save();
+        TempData["success"] = "Category deleted successfully";
         return RedirectToAction("Index");
-        
-       // return View(obj);
+
     }
 }

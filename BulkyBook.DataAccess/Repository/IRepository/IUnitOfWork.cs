@@ -11,6 +11,10 @@ namespace BulkyBook.DataAccess.Repository.IRepository
         ICategoryRepository Category { get; }
         ICoverTypeRepository CoverType{ get; }
         IProductRepository Product { get; }
+        IApplicationUserRepository ApplicationUser { get; }
+        IShoppingCartRepository ShoppingCart { get; }
+        IOrderDetailRepository OrderDetail { get; }
+        IOrderHeaderRepository OrderHeader { get; }
         void Save();
     }
 }

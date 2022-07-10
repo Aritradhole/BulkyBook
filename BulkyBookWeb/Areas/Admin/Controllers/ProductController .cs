@@ -115,31 +115,31 @@ public class ProductController : Controller
             return NotFound();
         }
         //var CategoryFromDb = _db.Categories.Find(id);
-        var CoverTypeFromDbFrist = _UnitOfWork.CoverType.GetFristOrDefault(c => c.Id == id);
+        var ProductFromDbFrist = _UnitOfWork.Product.GetFristOrDefault(c => c.Id == id);
         //var categoryFromDbSingle = _db.Categories.SingleOrDefault(c => c.Id == id);
-        if (CoverTypeFromDbFrist == null)
+        if (ProductFromDbFrist == null)
         {
             return NotFound();
         }
-        return View(CoverTypeFromDbFrist);
+        return View(ProductFromDbFrist);
     }
-    //POST
-    [HttpPost]
+    ////POST
+    [HttpDelete]
     [ValidateAntiForgeryToken]
     public IActionResult DeletePost(int? id)
     {
-        var obj= _UnitOfWork.CoverType.GetFristOrDefault(c => c.Id == id);
+        var obj = _UnitOfWork.Product.GetFristOrDefault(c => c.Id == id);
         if (obj == null)
         {
             return NotFound();
         }
 
-        _UnitOfWork.CoverType.Remove(obj);
+        _UnitOfWork.Product.Remove(obj);
         _UnitOfWork.Save();
         TempData["Success"] = "CoverType deleted successfully...";
         return RedirectToAction("Index");
-        
-       // return View(obj);
+
+        return View(obj);
     }
     #region API CALLS
     [HttpGet]
@@ -148,6 +148,29 @@ public class ProductController : Controller
         var productList = _UnitOfWork.Product.GetAll(includeProperties:"Category,CoverType");
         return Json(new { data = productList });
     }
+    //POST
+    //[HttpDelete]
+    
+    //public IActionResult Delete(int? id)
+    //{
+    //    var obj = _UnitOfWork.Product.GetFristOrDefault(c => c.Id == id);
+    //    if (obj == null)
+    //    {
+    //        return Json(new {success=false,massage="Errorwhile deleting"});
+    //    }
+    //    var oldImagePath = Path.Combine(_hostEnvironment.WebRootPath, obj.ImageUrl.TrimStart('\\'));
+    //    if (System.IO.File.Exists(oldImagePath))
+    //    {
+    //        System.IO.File.Delete(oldImagePath);
+    //    }
+
+    //    _UnitOfWork.Product.Remove(obj);
+    //    _UnitOfWork.Save();
+    //    TempData["Success"] = "Deleted successfully...";
+    //    return Json(new {success=true,message="Deleted successfully...."});
+
+    //    // return View(obj);
+    //}
     #endregion
 
 }

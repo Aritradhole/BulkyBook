@@ -17,6 +17,7 @@ public class CoverTypeController : Controller
 
     public IActionResult Index()
     {
+        //code to consume API to fech data 
         IEnumerable<CoverType> objCoverTypeList = _UnitOfWork.CoverType.GetAll();
         return View(objCoverTypeList);
     }

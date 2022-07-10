@@ -1,126 +1,105 @@
-﻿using BulkyBook.DataAccess;
-using BulkyBook.DataAccess.Repository.IRepository;
+﻿
 using BulkyBook.Models;
 using BulkyBook.Utility;
-using Microsoft.AspNetCore.Authorization;
+using BulkyBookWeb.Repository.IRepository;
 using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
-using System.Net.Http.Headers;
 
 namespace BulkyBookWeb.Controllers;
 [Area("Admin")]
 //[Authorize(Roles = SD.Role_Admin)]
 public class CategoryController : Controller
 {
-    private readonly IUnitOfWork _unitOfWork;
-
-    public CategoryController(IUnitOfWork unitOfWork)
+    private readonly ICategoryWebRepository _npRepo;
+    public CategoryController(ICategoryWebRepository npRepo)
     {
-        _unitOfWork = unitOfWork;
+        _npRepo = npRepo;
     }
-
-    public IActionResult Index()
+    public async Task<IActionResult> Index()
     {
-        IEnumerable<Category> objCategoryList = _unitOfWork.Category.GetAll();
+        IEnumerable<Category> objCategoryList = await _npRepo.GetAllAsync(SD.CategoryAPIPath);
         return View(objCategoryList);
     }
-
-    //GET
     public IActionResult Create()
     {
         return View();
     }
-
-    //POST
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public IActionResult Create(Category obj)
+    public async Task<IActionResult> Create(Category obj)
     {
-        if (obj.Name == obj.DisplayOrder.ToString())
-        {
-            ModelState.AddModelError("name", "The DisplayOrder cannot exactly match the Name.");
-        }
         if (ModelState.IsValid)
         {
-            _unitOfWork.Category.Add(obj);
-            _unitOfWork.Save();
+            if (obj.Id == 0)
+            {
+                await _npRepo.CreateAsync(SD.CategoryAPIPath, obj);
+            }
             TempData["success"] = "Category created successfully";
-            return RedirectToAction("Index");
+            return RedirectToAction(nameof(Index));
         }
-        return View(obj);
+        else
+        {
+            return View(obj);
+        }
     }
-
-    //GET
-    public IActionResult Edit(int? id)
+    public async Task<IActionResult> Edit(int? Id)
     {
-        if (id == null || id == 0)
+        Category obj = new Category();
+        if (Id == null)
         {
-            return NotFound();
+            //this will be true for Insert/Create
+            return View(obj);
         }
-        //var categoryFromDb = _db.Categories.Find(id);
-        var categoryFromDbFirst = _unitOfWork.Category.GetFristOrDefault(u => u.Id == id);
-        //var categoryFromDbSingle = _db.Categories.SingleOrDefault(u => u.Id == id);
-
-        if (categoryFromDbFirst == null)
-        {
-            return NotFound();
-        }
-
-        return View(categoryFromDbFirst);
-    }
-
-    //POST
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public IActionResult Edit(Category obj)
-    {
-        if (obj.Name == obj.DisplayOrder.ToString())
-        {
-            ModelState.AddModelError("name", "The DisplayOrder cannot exactly match the Name.");
-        }
-        if (ModelState.IsValid)
-        {
-            _unitOfWork.Category.Update(obj);
-            _unitOfWork.Save();
-            TempData["success"] = "Category updated successfully";
-            return RedirectToAction("Index");
-        }
-        return View(obj);
-    }
-
-    public IActionResult Delete(int? id)
-    {
-        if (id == null || id == 0)
-        {
-            return NotFound();
-        }
-        //var categoryFromDb = _db.Categories.Find(id);
-        var categoryFromDbFirst = _unitOfWork.Category.GetFristOrDefault(u => u.Id == id);
-        //var categoryFromDbSingle = _db.Categories.SingleOrDefault(u => u.Id == id);
-
-        if (categoryFromDbFirst == null)
-        {
-            return NotFound();
-        }
-
-        return View(categoryFromDbFirst);
-    }
-
-    //POST
-    [HttpPost, ActionName("Delete")]
-    [ValidateAntiForgeryToken]
-    public IActionResult DeletePOST(int? id)
-    {
-        var obj = _unitOfWork.Category.GetFristOrDefault(u => u.Id == id);
+        //Flow will come here for update
+        obj = await _npRepo.GetAsync(SD.CategoryAPIPath, Id.GetValueOrDefault());
         if (obj == null)
         {
             return NotFound();
         }
+        return View(obj);
 
-        _unitOfWork.Category.Remove(obj);
-        _unitOfWork.Save();
-        TempData["success"] = "Category deleted successfully";
-        return RedirectToAction("Index");
 
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Edit(Category obj)
+    {
+        if (ModelState.IsValid)
+        {
+            
+            await _npRepo.Updatesync(SD.CategoryAPIPath + obj.Id, obj);
+            TempData["success"] = "Category Updated Successfully.";
+            
+            return RedirectToAction(nameof(Index));
+        }
+        else
+        {
+            return View(obj);
+        }
+    }
+
+    //GET
+    public async Task<IActionResult> Delete(int? Id)
+    {
+        if (Id == null || Id == 0)
+        {
+            return NotFound();
+        }
+        Category obj = await _npRepo.GetAsync(SD.CategoryAPIPath, Id.GetValueOrDefault());
+
+        if (obj == null)
+        {
+            return NotFound();
+        }
+        return View(obj);
+    }
+    [HttpPost, ActionName("Delete")]
+    [ValidateAntiForgeryToken]
+    /*[Authorize(Roles = "Admin")]*/
+    public async Task<IActionResult> DeletePOST(int Id)
+    {
+        var status = await _npRepo.DeleteAsync(SD.CategoryAPIPath, Id);
+        TempData["Success"] = "Category Deleted Successfully.";
+        return RedirectToAction(nameof(Index));
     }
 }

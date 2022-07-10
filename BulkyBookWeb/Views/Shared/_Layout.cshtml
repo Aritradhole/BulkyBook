@@ -111,16 +111,16 @@
     </header>
     <div class="container">
         <main role="main" class="pb-3">
-            <partial  name="_Notification" />
+            <partial name="_Notification" />
             @RenderBody()
         </main>
     </div>
 
-    <footer class="footer text-muted bg-dark" style="position:fixed">
+    @*<footer class="footer text-muted bg-dark" style="position:fixed">
         <div class="container">
             &copy; 2022 - BulkyBookWeb - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
         </div>
-    </footer>
+    </footer>*@
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
@@ -131,6 +131,7 @@
     <script src="//cdn.datatables.net/1.11.2/js/jquery.dataTables.min.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
     <script src="https://cdn.tiny.cloud/1/a222a51nubo57koyufwttb872ujuyurokfpb7tzbua7j2ojc/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
+    
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

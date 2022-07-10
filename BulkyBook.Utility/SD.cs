@@ -25,5 +25,8 @@ namespace BulkyBook.Utility
        //public const string PaymentStatusDelayedPayment = "ApprovedForDelayedPayment";
         public const string PaymentStatusRejected = "Rejected";
 
+        public static string APIBaseUrl = "https://localhost:7255/";
+        public static string CategoryAPIPath = APIBaseUrl + "api/Category/";
+
     }
 }

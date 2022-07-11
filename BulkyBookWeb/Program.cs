@@ -33,6 +33,7 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<IEmailSender, EmailSender>();
 builder.Services.AddScoped<ICategoryWebRepository, CategoryWebRepository>();
+builder.Services.AddScoped<ICoverTypeWebRepository, CoverTypeWebRepository>();
 builder.Services.AddRazorPages().AddRazorRuntimeCompilation();
 builder.Services.ConfigureApplicationCookie(options =>
 {

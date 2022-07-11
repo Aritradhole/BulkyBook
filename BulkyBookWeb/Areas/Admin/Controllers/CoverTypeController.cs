@@ -1,6 +1,8 @@
 ﻿using BulkyBook.DataAccess;
 using BulkyBook.DataAccess.Repository.IRepository;
 using BulkyBook.Models;
+using BulkyBook.Utility;
+using BulkyBookWeb.Repository.IRepository;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BulkyBookWeb.Controllers;
@@ -8,17 +10,17 @@ namespace BulkyBookWeb.Controllers;
 
 public class CoverTypeController : Controller
 {
-    private readonly IUnitOfWork _UnitOfWork;
+    private readonly ICoverTypeWebRepository _npRepo;
 
-    public CoverTypeController(IUnitOfWork unitOfWork)
+    public CoverTypeController(ICoverTypeWebRepository npRepo)
     {
-        _UnitOfWork = unitOfWork;
+        _npRepo = npRepo;
     }
 
-    public IActionResult Index()
+    public async Task<IActionResult> Index()
     {
         //code to consume API to fech data 
-        IEnumerable<CoverType> objCoverTypeList = _UnitOfWork.CoverType.GetAll();
+        IEnumerable<CoverType> objCoverTypeList = await _npRepo.GetAllAsync(SD.CoverTypeAPIPath);
         return View(objCoverTypeList);
     }
     //CREATE METHOD
@@ -30,13 +32,12 @@ public class CoverTypeController : Controller
     //POST
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public IActionResult Create(CoverType obj)
+    public async Task<IActionResult> Create(CoverType obj)
     {
         
         if (ModelState.IsValid)
         {
-            _UnitOfWork.CoverType.Add(obj);
-            _UnitOfWork.Save();
+            await _npRepo.CreateAsync(SD.CoverTypeAPIPath, obj);
             TempData["Success"] = "CoverType created successfully...";
             return RedirectToAction("Index");
         }
@@ -44,14 +45,14 @@ public class CoverTypeController : Controller
     }
     //EDIT METHOD
     //Get
-    public IActionResult Edit(int? id)
+    public async Task<IActionResult> Edit(int? id)
     {
         if (id == null || id == 0)
         {
             return NotFound();
         }
         //var CategoryFromDb = _db.Categories.Find(id);
-        var CoverTypeFromDbFrist = _UnitOfWork.CoverType.GetFristOrDefault(c => c.Id == id);
+        var CoverTypeFromDbFrist = await _npRepo.GetAsync(SD.CoverTypeAPIPath, id.GetValueOrDefault());
         //var categoryFromDbSingle = _db.Categories.SingleOrDefault(c => c.Id == id);
         if (CoverTypeFromDbFrist == null)
         {
@@ -62,13 +63,12 @@ public class CoverTypeController : Controller
     //POST
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public IActionResult Edit(CoverType obj)
+    public async Task<IActionResult> Edit(CoverType obj)
     {
        
         if (ModelState.IsValid)
         {
-            _UnitOfWork.CoverType.Update(obj);
-            _UnitOfWork.Save();
+            await _npRepo.Updatesync(SD.CoverTypeAPIPath + obj.Id, obj);
             TempData["Success"] = "CoverType updated successfully...";
             return RedirectToAction("Index");
         }
@@ -76,14 +76,14 @@ public class CoverTypeController : Controller
     }
     //DELETE METHOD
     //Get
-    public IActionResult Delete(int? id)
+    public async Task<IActionResult> Delete(int? id)
     {
         if (id == null || id == 0)
         {
             return NotFound();
         }
         //var CategoryFromDb = _db.Categories.Find(id);
-        var CoverTypeFromDbFrist = _UnitOfWork.CoverType.GetFristOrDefault(c => c.Id == id);
+        var CoverTypeFromDbFrist = await _npRepo.GetAsync(SD.CoverTypeAPIPath,id.GetValueOrDefault());
         //var categoryFromDbSingle = _db.Categories.SingleOrDefault(c => c.Id == id);
         if (CoverTypeFromDbFrist == null)
         {
@@ -94,16 +94,11 @@ public class CoverTypeController : Controller
     //POST
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public IActionResult DeletePost(int? id)
+    public async Task<IActionResult> DeletePost(int? id)
     {
-        var obj= _UnitOfWork.CoverType.GetFristOrDefault(c => c.Id == id);
-        if (obj == null)
-        {
-            return NotFound();
-        }
+       
+        var obj = await _npRepo.DeleteAsync(SD.CoverTypeAPIPath, id.GetValueOrDefault());
 
-        _UnitOfWork.CoverType.Remove(obj);
-        _UnitOfWork.Save();
         TempData["Success"] = "CoverType deleted successfully...";
         return RedirectToAction("Index");
         

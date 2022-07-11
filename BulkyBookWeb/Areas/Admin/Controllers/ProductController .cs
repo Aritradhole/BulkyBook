@@ -5,40 +5,50 @@ using BulkyBook.Models.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Hosting;
+using BulkyBookWeb.Repository.IRepository;
+using BulkyBook.Utility;
 
 namespace BulkyBookWeb.Controllers;
 [Area("Admin")]
 
 public class ProductController : Controller
 {
-    private readonly IUnitOfWork _UnitOfWork;
+    private readonly IProductWebRepository _npRepo;
+    private readonly ICategoryWebRepository _npCategoryRepo;
+    private readonly ICoverTypeWebRepository _npCoverRepo;
+
     private readonly IWebHostEnvironment _hostEnvironment;
 
-    public ProductController(IUnitOfWork unitOfWork, IWebHostEnvironment hostEnvironment)
+    public ProductController(IProductWebRepository npRepo, ICategoryWebRepository npCategoryRepo, ICoverTypeWebRepository npCoverRepo, IWebHostEnvironment hostEnvironment)
     {
-        _UnitOfWork = unitOfWork;
+        _npRepo = npRepo;
+        _npCategoryRepo = npCategoryRepo;
+        _npCoverRepo = npCoverRepo;
         _hostEnvironment = hostEnvironment;
     }
 
-    public IActionResult Index()
+    public async Task<IActionResult> Index()
     {
-        var productList = _UnitOfWork.Product.GetAll(includeProperties: "Category,CoverType");
+        IEnumerable<Product> productList = await _npRepo.GetAllAsync(SD.ProductAPIPath);
+        
         return View(productList);
     }
    
     //UPSERT METHOD
     //Get
-    public IActionResult Upsert(int? id)
+    public async Task<IActionResult> Upsert(int? id)
     {
+        IEnumerable<Category> objCategoryList = await _npCategoryRepo.GetAllAsync(SD.CategoryAPIPath);
+        IEnumerable<CoverType> objCoverList = await _npCoverRepo.GetAllAsync(SD.CoverTypeAPIPath);
         ProductVM productVM = new()
         {
             Product = new(),
-            CategoryList = _UnitOfWork.Category.GetAll().Select(i=>new SelectListItem
+            CategoryList = objCategoryList.Select(i=>new SelectListItem
             {
                 Text = i.Name,
                 Value = i.Id.ToString(),
             }),
-            CoverTypeList = _UnitOfWork.CoverType.GetAll().Select(i => new SelectListItem
+            CoverTypeList =objCoverList.Select(i => new SelectListItem
             {
                 Text = i.Name,
                 Value = i.Id.ToString(),
@@ -54,7 +64,7 @@ public class ProductController : Controller
         }
         else
         {
-            productVM.Product=_UnitOfWork.Product.GetFristOrDefault(u => u.Id == id);
+            productVM.Product = await _npRepo.GetAsync(SD.ProductAPIPath, id.GetValueOrDefault());
             return View(productVM);
             //Update Product
 
@@ -65,7 +75,7 @@ public class ProductController : Controller
     //POST
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public IActionResult Upsert(ProductVM obj, IFormFile? file)
+    public async Task<IActionResult> Upsert(ProductVM obj, IFormFile? file)
     {
        
         if (ModelState.IsValid)
@@ -94,13 +104,14 @@ public class ProductController : Controller
             }
             if (obj.Product.Id == 0)
             {
-                _UnitOfWork.Product.Add(obj.Product);
+                await _npRepo.CreateAsync(SD.ProductAPIPath, obj.Product);
             }
             else
             {
-                _UnitOfWork.Product.Update(obj.Product);
+                await _npRepo.Updatesync(SD.ProductAPIPath+obj.Product.Id, obj.Product);
+
             }
-            _UnitOfWork.Save();
+            
             TempData["Success"] = "Product created successfully...";
             return RedirectToAction("Index");
         }
@@ -108,34 +119,50 @@ public class ProductController : Controller
     }
     //DELETE METHOD
     //Get
-    public IActionResult Delete(int? id)
+    public async Task<IActionResult> Delete(int? id)
     {
         if (id == null || id == 0)
         {
             return NotFound();
         }
+        IEnumerable<Category> objCategoryList = await _npCategoryRepo.GetAllAsync(SD.CategoryAPIPath);
+        IEnumerable<CoverType> objCoverList = await _npCoverRepo.GetAllAsync(SD.CoverTypeAPIPath);
         //var CategoryFromDb = _db.Categories.Find(id);
-        var ProductFromDbFrist = _UnitOfWork.Product.GetFristOrDefault(c => c.Id == id);
+        ProductVM productVM = new()
+        {
+            Product = new(),
+            CategoryList = objCategoryList.Select(i => new SelectListItem
+            {
+                Text = i.Name,
+                Value = i.Id.ToString(),
+            }),
+            CoverTypeList = objCoverList.Select(i => new SelectListItem
+            {
+                Text = i.Name,
+                Value = i.Id.ToString(),
+            }),
+        };
+        productVM.Product = await _npRepo.GetAsync(SD.ProductAPIPath, id.GetValueOrDefault());
+        
         //var categoryFromDbSingle = _db.Categories.SingleOrDefault(c => c.Id == id);
-        if (ProductFromDbFrist == null)
+        if (productVM.Product == null)
         {
             return NotFound();
         }
-        return View(ProductFromDbFrist);
+        return View(productVM);
     }
     ////POST
-    [HttpDelete]
+    [HttpPost, ActionName("Delete")]
     [ValidateAntiForgeryToken]
-    public IActionResult DeletePost(int? id)
+    public async Task<IActionResult> DeletePost(int? id)
     {
-        var obj = _UnitOfWork.Product.GetFristOrDefault(c => c.Id == id);
+        var obj = await _npRepo.GetAsync(SD.ProductAPIPath, id.GetValueOrDefault());
         if (obj == null)
         {
             return NotFound();
         }
 
-        _UnitOfWork.Product.Remove(obj);
-        _UnitOfWork.Save();
+        await _npRepo.DeleteAsync(SD.ProductAPIPath, id.GetValueOrDefault());
         TempData["Success"] = "CoverType deleted successfully...";
         return RedirectToAction("Index");
 
@@ -143,9 +170,9 @@ public class ProductController : Controller
     }
     #region API CALLS
     [HttpGet]
-    public IActionResult GetAll()
+    public async Task<IActionResult> GetAll()
     {
-        var productList = _UnitOfWork.Product.GetAll(includeProperties:"Category,CoverType");
+        IEnumerable<Product> productList = await _npRepo.GetAllAsync(SD.ProductAPIPath);
         return Json(new { data = productList });
     }
     //POST

@@ -28,6 +28,7 @@ namespace BulkyBook.Utility
         public static string APIBaseUrl = "https://localhost:7255/";
         public static string CategoryAPIPath = APIBaseUrl + "api/Category/";
         public static string CoverTypeAPIPath = APIBaseUrl + "api/CoverType/";
+        public static string ProductAPIPath = APIBaseUrl + "api/Product/";
 
     }
 }
